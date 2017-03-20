@@ -375,7 +375,7 @@ class Parser
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
-                    $secondKey = $relation->getForeignKey();
+                    $secondKey = $relation->getQualifiedForeignKeyName();
                 } else if ($relationType === 'BelongsToMany') {
                     $firstKey = $relation->getQualifiedParentKeyName();
                     $secondKey = $relation->getRelated()->getQualifiedKeyName();

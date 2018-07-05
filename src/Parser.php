@@ -175,7 +175,7 @@ class Parser
         $this->multiple = $multiple;
 
         if ($multiple) {
-            $fullTextSearchColumns = $options;
+            $fullTextSearchColumns = array_map([$this, 'getQualifiedColumnName'], $options);
 
             //Parse and apply offset using the laravel "offset" function
             if ($offset = $this->getParam('offset')) {
@@ -203,12 +203,18 @@ class Parser
         } else {
             $identification = $options;
 
-            if (is_numeric($identification)) {
-                $this->query->where('id', $identification);
-            } else if (is_array($identification)) {
+            if (is_array($identification)) {
                 foreach ($identification as $column => $value) {
                     $this->query->where($column, $value);
                 }
+            } else {
+                if($this->isEloquentBuilder) {
+                    $primaryKey = $this->builder->getModel()->getQualifiedKeyName();
+                } else {
+                    $primaryKey = $this->getQualifiedColumnName('id');
+                }
+                
+                $this->query->where($primaryKey, $identification);
             }
         }
 
@@ -257,8 +263,8 @@ class Parser
      */
     protected function getParam($param)
     {
-        if (isset($this->params[$this->prefix . $param])) {
-            return $this->params[$this->prefix . $param];
+        if (isset($this->params[$this->prefix.$param])) {
+            return $this->params[$this->prefix.$param];
         }
 
         return false;
@@ -275,7 +281,7 @@ class Parser
         $prefix = $this->prefix;
 
         $filterParams = array_diff_ukey($this->params, $reserved, function ($a, $b) use ($prefix) {
-            return $a != $prefix . $b;
+            return $a != $prefix.$b;
         });
 
         if (count($filterParams) > 0) {
@@ -322,7 +328,7 @@ class Parser
     protected function parseWith($withParam)
     {
         $fields = $this->query->columns;
-        $fieldsCount = count($fields);
+        $fieldsCount = count($fields ?: []);
         $baseModel = $this->builder->getModel();
 
         $withHistory = [];
@@ -340,7 +346,7 @@ class Parser
                 $previousHistoryPath = implode('.', array_splice($partsCopy, 0, $i));
 
                 //Get the current history part based on the previous one
-                $currentHistoryPath = $previousHistoryPath ? $previousHistoryPath . '.' . $part : $part;
+                $currentHistoryPath = $previousHistoryPath ? $previousHistoryPath.'.'.$part : $part;
 
                 //Create new history element
                 if (!isset($withHistory[$currentHistoryPath])) {
@@ -349,12 +355,12 @@ class Parser
 
                 //Get all given fields related to the current part
                 $withHistory[$currentHistoryPath]['fields'] = array_filter($this->additionalFields, function ($field) use ($part) {
-                    return preg_match('/' . $part . '\..+$/', $field);
+                    return preg_match('/'.$part.'\..+$/', $field);
                 });
 
                 //Get all given sorts related to the current part
                 $withHistory[$currentHistoryPath]['sorts'] = array_filter($this->additionalSorts, function ($pair) use ($part) {
-                    return preg_match('/' . $part . '\..+$/', $pair[0]);
+                    return preg_match('/'.$part.'\..+$/', $pair[0]);
                 });
 
                 if (!isset($previousModel)) {
@@ -375,12 +381,25 @@ class Parser
                     $secondKey = $relation->getQualifiedParentKeyName();
                 } else if ($relationType === 'HasMany' || $relationType === 'HasOne') {
                     $firstKey = $relation->getQualifiedParentKeyName();
-                    $secondKey = $relation->getQualifiedForeignKeyName();
+                    if (method_exists($relation, 'getQualifiedForeignKeyName')) {
+                        $secondKey = $relation->getQualifiedForeignKeyName();
+                    } else {
+                        // compatibility for laravel < 5.4
+                        $secondKey = $relation->getForeignKey();
+                    }
                 } else if ($relationType === 'BelongsToMany') {
                     $firstKey = $relation->getQualifiedParentKeyName();
                     $secondKey = $relation->getRelated()->getQualifiedKeyName();
                 } else if ($relationType === 'HasManyThrough') {
-                    $firstKey = $relation->getHasCompareKey();
+                    if (method_exists($relation, 'getQualifiedLocalKeyName')) {
+                        $firstKey = $relation->getQualifiedLocalKeyName();
+                    } else if (method_exists($relation, 'getExistenceCompareKey')) {
+                        // compatibility for laravel 5.4
+                        $firstKey = $relation->getExistenceCompareKey();
+                    } else {
+                        // compatibility for laravel < 5.4
+                        $firstKey = $relation->getHasCompareKey();
+                    }
                     $secondKey = null;
                 } else {
                     die('Relation type not supported!');
@@ -425,9 +444,6 @@ class Parser
 
                 //Attach sorts
                 foreach ($withHistory[$withHistoryKey]['sorts'] as $pair) {
-                    $pos = strpos($pair[0], '.');
-                    $pair = $pos !== false ? [substr($pair[0], $pos + 1), $pair[1]] : $pair;
-
                     call_user_func_array([$query, 'orderBy'], $pair);
                 }
             };
@@ -436,7 +452,7 @@ class Parser
         $this->builder->with($withsArr);
 
         //Merge the base fields
-        if (count($fields) > 0) {
+        if (count($fields ?: []) > 0) {
             if (!is_array($this->query->columns)) {
                 $this->query->columns = [];
             }
@@ -462,7 +478,8 @@ class Parser
                 $direction = 'asc';
             }
 
-            $pair = [preg_replace('/^-/', '', $sortElem), $direction];
+            $column = $this->getQualifiedColumnName(preg_replace('/^-/', '', $sortElem));
+            $pair = [$column, $direction];
 
             //Only add the sorts that are on the base resource
             if (strpos($sortElem, '.') === false) {
@@ -501,7 +518,7 @@ class Parser
 
             //Matches every parameter with an optional prefix and/or postfix
             //e.g. not-title-lk, title-lk, not-title, title
-            $keyRegex = '/^(?:(' . $supportedPrefixesStr . ')-)?(.*?)(?:-(' . $supportedPostfixesStr . ')|$)/';
+            $keyRegex = '/^(?:('.$supportedPrefixesStr.')-)?(.*?)(?:-('.$supportedPostfixesStr.')|$)/';
 
             preg_match($keyRegex, $filterParamKey, $keyMatches);
 
@@ -519,7 +536,7 @@ class Parser
                 }
             }
 
-            $column = $keyMatches[2];
+            $column = $this->getQualifiedColumnName($keyMatches[2]);
 
             if ($comparator == 'IN') {
                 $values = explode(',', $filterParamValue);
@@ -588,7 +605,7 @@ class Parser
             $qParam = $this->query->getConnection()->getPdo()->quote($qParam);
 
             //Use native fulltext search
-            $this->query->whereRaw('MATCH(' . implode(',', $fullTextSearchColumns) . ') AGAINST("' . $qParam . '" IN BOOLEAN MODE)');
+            $this->query->whereRaw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE)');
 
             //Add the * to the selects because of the score column
             if (count($this->query->columns) == 0) {
@@ -597,7 +614,7 @@ class Parser
 
             //Add the score column
             $scoreColumn = Config::get('apihandler.fulltext_score_column');
-            $this->query->addSelect($this->query->raw('MATCH(' . implode(',', $fullTextSearchColumns) . ') AGAINST("' . $qParam . '" IN BOOLEAN MODE) as `' . $scoreColumn . '`'));
+            $this->query->addSelect($this->query->raw('MATCH('.implode(',', $fullTextSearchColumns).') AGAINST("'.$qParam.'" IN BOOLEAN MODE) as `'.$scoreColumn.'`'));
         } else {
             $keywords = explode(' ', $qParam);
 
@@ -605,7 +622,7 @@ class Parser
             $this->query->where(function ($query) use ($fullTextSearchColumns, $keywords) {
                 foreach ($fullTextSearchColumns as $column) {
                     foreach ($keywords as $keyword) {
-                        $query->orWhere($column, 'LIKE', '%' . $keyword . '%');
+                        $query->orWhere($column, 'LIKE', '%'.$keyword.'%');
                     }
                 }
             });
@@ -635,9 +652,9 @@ class Parser
                 }
             } else if ($cat == 'meta') {
                 if ($option == 'total-count') {
-                    $this->meta[] = new CountMetaProvider('Meta-Total-Count', $this->originalQuery);
+                    $this->meta[] = new CountMetaProvider('Meta-Total-Count', $this->originalBuilder);
                 } else if ($option == 'filter-count') {
-                    $this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->query);
+                    $this->meta[] = new CountMetaProvider('Meta-Filter-Count', $this->builder);
                 }
             } else if ($cat == 'response') {
                 if ($option == 'envelope') {
@@ -707,6 +724,28 @@ class Parser
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * Get the qualified column name
+     *
+     * @param  string $column
+     * @param  null   $table
+     * @return string
+     */
+    protected function getQualifiedColumnName($column, $table = null)
+    {
+        //Check whether there is a matching column expression that contains an 
+        //alias and should therefore not be turned into a qualified column name.
+        $isAlias = count(array_filter($this->query->columns ?: [], function($queryColumn) use ($column) {
+            return preg_match('/.*[\s\'"`]as\s*[\s\'"`]' . $column . '[\'"`]?$/', trim($queryColumn));
+        })) > 0;
+
+        if (strpos($column, '.') === false && !$isAlias) {
+            return $table ?: $this->query->from.'.'.$column;
+        } else {
+            return $column;
         }
     }
 }

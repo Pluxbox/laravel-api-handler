@@ -12,6 +12,7 @@ use \Illuminate\Database\Eloquent\Relations\MorphOne;
 use \Illuminate\Database\Query\Builder as QueryBuilder;
 use \Illuminate\Support\Facades\Config;
 use \InvalidArgumentException;
+use ReflectionException;
 use \ReflectionObject;
 
 class Parser
@@ -118,6 +119,8 @@ class Parser
      * @var boolean
      */
     protected $isQueryBuilder = false;
+    private $config;
+    private $prefix;
 
     /**
      * Instantiate the Parser class
@@ -127,9 +130,10 @@ class Parser
      */
     public function __construct($builder, $params)
     {
+
         $this->builder = $builder;
         $this->params = $params;
-
+        
         $this->prefix = Config::get('apihandler.prefix');
         $this->envelope = Config::get('apihandler.envelope');
 
@@ -146,6 +150,8 @@ class Parser
             $this->query = $builder->getBaseQuery();
             $this->isEloquentBuilder = true;
         } else if ($isEloquentModel) {
+            var_dump($isEloquentModel);
+            var_dump('Parser.php2');
             //Convert the model to a builder object
             $this->builder = $builder->newQuery();
 
@@ -157,7 +163,6 @@ class Parser
         } else {
             throw new InvalidArgumentException('The builder argument has to the wrong type.');
         }
-
         $this->originalBuilder = clone $this->builder;
         $this->originalQuery = clone $this->query;
     }
@@ -166,9 +171,11 @@ class Parser
      * Parse the query parameters with the given options.
      * Either for a single dataset or multiple.
      *
-     * @param  mixed    $options
-     * @param  boolean  $multiple
+     * @param mixed $options
+     * @param boolean $multiple
      * @return void
+     * @throws ApiHandlerException
+     * @throws ReflectionException
      */
     public function parse($options, $multiple = false)
     {
@@ -322,8 +329,10 @@ class Parser
     /**
      * Parse the with parameter
      *
-     * @param  string $withParam
+     * @param string $withParam
      * @return void
+     * @throws ApiHandlerException
+     * @throws ReflectionException
      */
     protected function parseWith($withParam)
     {
@@ -632,7 +641,7 @@ class Parser
     /**
      * Parse the meta parameter and prepare an array of meta provider objects.
      *
-     * @param  array $metaParam
+     * @param $configParam
      * @return void
      */
     protected function parseConfig($configParam)
@@ -707,9 +716,10 @@ class Parser
      * Check if there exists a method marked with the "@Relation"
      * annotation on the given model.
      *
-     * @param  Illuminate\Database\Eloquent\Model  $model
-     * @param  string                              $relationName
+     * @param Illuminate\Database\Eloquent\Model $model
+     * @param string $relationName
      * @return boolean
+     * @throws ReflectionException
      */
     protected function isRelation($model, $relationName)
     {

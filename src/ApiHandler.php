@@ -1,22 +1,26 @@
 <?php namespace Marcelgwerder\ApiHandler;
 
-use Illuminate\Support\Facades\Input;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
+use \Illuminate\Support\Facades\Request;
+use ReflectionException;
 
 class ApiHandler
 {
     /**
      * Return a new Result object for a single dataset
      *
-     * @param  mixed                           $queryBuilder   Some kind of query builder instance
-     * @param  array|integer                   $identification Identification of the dataset to work with
-     * @param  array|boolean                   $queryParams    The parameters used for parsing
-     * @return Marcelgwerder\ApiHandler\Result                 Result object that provides getter methods
+     * @param mixed $queryBuilder Some kind of query builder instance
+     * @param array|integer $identification Identification of the dataset to work with
+     * @param array|boolean $queryParams The parameters used for parsing
+     * @return Result
+     * @throws ApiHandlerException
+     * @throws ReflectionException
      */
     public function parseSingle($queryBuilder, $identification, $queryParams = false)
     {
         if ($queryParams === false) {
-            $queryParams = Input::get();
+            $queryParams = Request::input();
         }
 
         $parser = new Parser($queryBuilder, $queryParams);
@@ -28,17 +32,21 @@ class ApiHandler
     /**
      * Return a new Result object for multiple datasets
      *
-     * @param  mixed            $queryBuilder          Some kind of query builder instance
-     * @param  array            $fullTextSearchColumns Columns to search in fulltext search
-     * @param  array|boolean    $queryParams           A list of query parameter
+     * @param mixed $queryBuilder Some kind of query builder instance
+     * @param array $fullTextSearchColumns Columns to search in fulltext search
+     * @param array|boolean $queryParams A list of query parameter
      * @return Result
+     * @throws ApiHandlerException
+     * @throws ReflectionException
      */
     public function parseMultiple($queryBuilder, $fullTextSearchColumns = array(), $queryParams = false)
     {
-        if ($queryParams === false) {
-            $queryParams = Input::get();
-        }
 
+        if ($queryParams === false) {
+            $queryParams = Request::input();
+        }
+        var_dump('parseMultiple');
+        var_dump($queryBuilder);
         $parser = new Parser($queryBuilder, $queryParams);
         $parser->parse($fullTextSearchColumns, true);
 
@@ -49,7 +57,7 @@ class ApiHandler
      * Return a new "created" response object
      *
      * @param  array|object $object
-     * @return Response
+     * @return JsonResponse
      */
     public function created($object)
     {
@@ -60,7 +68,7 @@ class ApiHandler
      * Return a new "updated" response object
      *
      * @param  array|object $object
-     * @return Response
+     * @return JsonResponse|\Illuminate\Http\Response
      */
     public function updated($object = null)
     {
@@ -75,7 +83,7 @@ class ApiHandler
      * Return a new "deleted" response object
      *
      * @param  array|object $object
-     * @return Response
+     * @return JsonResponse|\Illuminate\Http\Response
      */
     public function deleted($object = null)
     {

@@ -1,9 +1,10 @@
 <?php
+use Illuminate\Database\Eloquent\Model;
 /**
  * This model is only used for testing purpose
  */
 
-class User extends \Illuminate\Database\Eloquent\Model
+class User extends Model
 {
     protected $connection = 'mysql';
 

@@ -1,16 +1,39 @@
-<?php
-use Mockery as m;
+<?php /** @noinspection ALL */
+
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Query\Expression;
 use \Illuminate\Http\JsonResponse;
 use \Illuminate\Support\Facades\Config;
-use \Illuminate\Support\Facades\Input;
+use \Illuminate\Support\Facades\Request;
 use \Illuminate\Support\Facades\Response;
 use \Marcelgwerder\ApiHandler\ApiHandler;
+use Marcelgwerder\ApiHandler\ApiHandlerException;
+use PHPUnit\Framework\TestCase;
+use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
-class ApiHandlerTest extends PHPUnit_Framework_TestCase
+class ApiHandlerTest extends TestCase
 {
-    public function setUp()
+
+
+    /**
+     * @var array
+     */
+    private $params;
+    /**
+     * @var Expression
+     */
+    private $fulltextSelectExpression;
+    private $apiHandler;
+    /**
+     * @var array
+     */
+    private $testData;
+
+    public function tearDown(): void {
+        Mockery::close();
+    }
+
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -43,18 +66,18 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $this->fulltextSelectExpression = new Expression('MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`');
 
         //Test data
-        $this->data = [
+        $this->testData = [
             ['foo' => 'A1', 'bar' => 'B1'],
             ['foo' => 'A2', 'bar' => 'B2'],
         ];
 
         //Mock the application
-        $app = m::mock('AppMock');
+        $app = Mockery::mock('AppMock');
         $app->shouldReceive('instance')->once()->andReturn($app);
         Illuminate\Support\Facades\Facade::setFacadeApplication($app);
 
         //Mock the config
-        $config = m::mock('ConfigMock');
+        $config = Mockery::mock('ConfigMock');
         $config->shouldReceive('get')->once()
                ->with('apihandler.prefix')->andReturn('_');
         $config->shouldReceive('get')->once()
@@ -72,18 +95,18 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         $app->shouldReceive('make')->once()->andReturn($config);
 
         //Mock the input
-        $input = m::mock('InputMock');
+        $input = Mockery::mock('InputMock');
         $input->shouldReceive('get')->once()
               ->with()->andReturn($this->params);
-        Input::swap($input);
+        Request::swap($input);
 
         //Mock the response
-        $response = m::mock('ResponseMock');
+        $response = Mockery::mock('ResponseMock');
         $response->shouldReceive('json')->once()->andReturn(new JsonResponse(['meta' => [], 'data' => new Collection()]));
         Response::swap($response);
 
         //Mock pdo
-        $pdo = m::mock('PdoMock');
+        $pdo = Mockery::mock('PdoMock');
         $pdo->shouldReceive('quote')->once()
             ->with('Something to search')->andReturn('Something to search');
 
@@ -91,14 +114,14 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
         //tests/Database/DatabaseEloquentBuilderTest.php#L408-L418 (mockConnectionForModel($model, $database))
         $grammar = new Illuminate\Database\Query\Grammars\MySqlGrammar;
         $processor = new Illuminate\Database\Query\Processors\MySqlProcessor;
-        $connection = m::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
-        $connection->shouldReceive('select')->once()->with('select * from `posts`', [])->andReturn($this->data);
-        $connection->shouldReceive('select')->once()->with('select * from `posts`', [], true)->andReturn($this->data);
+        $connection = Mockery::mock('Illuminate\Database\ConnectionInterface', ['getQueryGrammar' => $grammar, 'getPostProcessor' => $processor]);
+        $connection->shouldReceive('select')->once()->with('select * from `posts`', [])->andReturn($this->testData);
+        $connection->shouldReceive('select')->once()->with('select * from `posts`', [], true)->andReturn($this->testData);
         $connection->shouldReceive('raw')->once()->with('MATCH(posts.title,posts.description) AGAINST("Something to search" IN BOOLEAN MODE) as `_score`')
                    ->andReturn($this->fulltextSelectExpression);
         $connection->shouldReceive('getPdo')->once()->andReturn($pdo);
 
-        $resolver = m::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
+        $resolver = Mockery::mock('Illuminate\Database\ConnectionResolverInterface', ['connection' => $connection]);
 
         Post::setConnectionResolver($resolver);
 
@@ -123,7 +146,6 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
     public function testGetBuilder()
     {
-
         $post = new Post();
 
         $builder = $this->apiHandler->parseMultiple($post, ['title', 'description'], $this->params)->getBuilder();
@@ -290,9 +312,13 @@ class ApiHandlerTest extends PHPUnit_Framework_TestCase
 
     public function testGetResponse()
     {
+
         $post = new Post();
 
+        var_dump('testGetResponse1');
         $response = $this->apiHandler->parseMultiple($post, ['title', 'description'], ['_config' => 'response-envelope'])->getResponse();
+
+        var_dump('testGetResponse2');
         $data = $response->getData();
 
         $this->assertInstanceOf('Illuminate\Http\JsonResponse', $response);

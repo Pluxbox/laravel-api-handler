@@ -6,8 +6,8 @@ use \Illuminate\Http\JsonResponse;
 use \Illuminate\Support\Facades\Config;
 use \Illuminate\Support\Facades\Request;
 use \Illuminate\Support\Facades\Response;
-use \Marcelgwerder\ApiHandler\ApiHandler;
-use Marcelgwerder\ApiHandler\ApiHandlerException;
+use \Pluxbox\ApiHandler\ApiHandler;
+use Pluxbox\ApiHandler\ApiHandlerException;
 use PHPUnit\Framework\TestCase;
 use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
@@ -133,7 +133,7 @@ class ApiHandlerTest extends TestCase
         $post = new Post();
         $result = $this->apiHandler->parseSingle($post, 5, []);
 
-        $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
+        $this->assertInstanceOf('Pluxbox\ApiHandler\Result', $result);
     }
 
     public function testParseMultiple()
@@ -141,7 +141,7 @@ class ApiHandlerTest extends TestCase
         $post = new Post();
         $result = $this->apiHandler->parseMultiple($post, [], []);
 
-        $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
+        $this->assertInstanceOf('Pluxbox\ApiHandler\Result', $result);
     }
 
     public function testGetBuilder()

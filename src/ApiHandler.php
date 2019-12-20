@@ -1,4 +1,4 @@
-<?php namespace Marcelgwerder\ApiHandler;
+<?php namespace Pluxbox\ApiHandler;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;

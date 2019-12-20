@@ -1,5 +1,5 @@
 {
-    "name": "marcelgwerder/laravel-api-handler",
+    "name": "pluxbox/laravel-api-handler",
     "description": "Package providing helper functions for a Laravel REST-API ",
     "keywords": ["api", "laravel", "rest", "url", "parse", "mysql"],
     "homepage": "http://github.com/marcelgwerder/laravel-api-handler",
@@ -22,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Marcelgwerder\\ApiHandler\\": "src"
+            "Pluxbox\\ApiHandler\\": "src"
         }
     },
     "minimum-stability": "stable"

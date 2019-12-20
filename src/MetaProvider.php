@@ -1,4 +1,4 @@
-<?php namespace Marcelgwerder\ApiHandler;
+<?php namespace Pluxbox\ApiHandler;
 
 abstract class MetaProvider
 {

@@ -1,4 +1,4 @@
-<?php namespace Marcelgwerder\ApiHandler;
+<?php namespace Pluxbox\ApiHandler;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +10,7 @@ class Result
     /**
      * Parser instance.
      *
-     * @var Marcelgwerder\ApiHandler\Parser
+     * @var Pluxbox\ApiHandler\Parser
      */
     protected $parser;
 
@@ -24,7 +24,7 @@ class Result
     /**
      * Create a new result
      *
-     * @param  Marcelgwerder\ApiHandler\Parser $parse
+     * @param  Pluxbox\ApiHandler\Parser $parse
      * @return void
      */
     public function __construct(Parser $parser)

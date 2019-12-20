@@ -1,4 +1,4 @@
-<?php namespace Marcelgwerder\ApiHandler;
+<?php namespace Pluxbox\ApiHandler;
 
 use \ArrayObject;
 use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;

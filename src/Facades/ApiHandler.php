@@ -1,4 +1,4 @@
-<?php namespace Marcelgwerder\ApiHandler\Facades;
+<?php namespace Pluxbox\ApiHandler\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

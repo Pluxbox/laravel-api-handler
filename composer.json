@@ -25,5 +25,12 @@
             "Pluxbox\\ApiHandler\\": "src"
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Pluxbox\\ApiHandler\\ApiHandlerServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "stable"
 }

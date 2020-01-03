@@ -4,7 +4,6 @@ require __DIR__ . "/Post.php";
 require __DIR__ . "/Comment.php";
 require __DIR__ . "/User.php";
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Query\Expression;
 use \Illuminate\Http\JsonResponse;
@@ -12,7 +11,6 @@ use \Illuminate\Support\Facades\Config;
 use \Illuminate\Support\Facades\Request;
 use \Illuminate\Support\Facades\Response;
 use \Marcelgwerder\ApiHandler\ApiHandler;
-use Marcelgwerder\ApiHandler\ApiHandlerException;
 use PHPUnit\Framework\TestCase;
 
 class ApiHandlerTest extends TestCase

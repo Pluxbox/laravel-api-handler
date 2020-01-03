@@ -1,16 +1,20 @@
-<?php namespace Pluxbox\ApiHandler;
+<?php
+
+namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
-use \Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Config;
 
 class Result
 {
     /**
      * Parser instance.
      *
-     * @var Pluxbox\ApiHandler\Parser
+     * @var Parser
      */
     protected $parser;
 
@@ -24,8 +28,7 @@ class Result
     /**
      * Create a new result
      *
-     * @param  Pluxbox\ApiHandler\Parser $parse
-     * @return void
+     * @param Parser $parser
      */
     public function __construct(Parser $parser)
     {
@@ -36,7 +39,7 @@ class Result
      * Return a laravel response object including the correct status code and headers
      *
      * @param bool $resultOrFail
-     * @return Illuminate\Support\Facades\Response
+     * @return JsonResponse
      */
     public function getResponse($resultOrFail = false)
     {
@@ -71,7 +74,7 @@ class Result
     /**
      * Return the query builder including the results
      *
-     * @return Illuminate\Database\Query\Builder $result
+     * @return Builder $result
      */
     public function getResult()
     {
@@ -95,7 +98,7 @@ class Result
     /**
      * Return the query builder including the result or fail if it could not be found
      *
-     * @return Illuminate\Database\Query\Builder $result
+     * @return Builder $result
      */
     public function getResultOrFail()
     {
@@ -115,7 +118,7 @@ class Result
     /**
      * Get the query bulder object
      *
-     * @return Illuminate\Database\Query\Builder
+     * @return Builder
      */
     public function getBuilder()
     {
@@ -275,7 +278,7 @@ class Result
                     $response[$key] = $this->removeUnallowedRelationsFromResponse($response[$key], $allowedRelations, $loadedRelations, ($prefix ?: '') . $relationKey . '.');
                 }
 
-            // just pass numeric arrays to the method again as they may contain additional relations in their values
+                // just pass numeric arrays to the method again as they may contain additional relations in their values
             } else if (is_array($attr) && is_numeric($key)) {
                 $response[$key] = $this->removeUnallowedRelationsFromResponse($response[$key], $allowedRelations, $loadedRelations, $prefix);
             }

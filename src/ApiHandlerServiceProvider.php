@@ -1,4 +1,6 @@
-<?php namespace Pluxbox\ApiHandler;
+<?php
+
+namespace Marcelgwerder\ApiHandler;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +32,6 @@ class ApiHandlerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('ApiHandler', 'Pluxbox\ApiHandler\ApiHandler');
+        $this->app->bind('ApiHandler', 'Marcelgwerder\ApiHandler\ApiHandler');
     }
 }

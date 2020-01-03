@@ -22,13 +22,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Pluxbox\\ApiHandler\\": "src"
+            "Marcelgwerder\\ApiHandler\\": "src"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Pluxbox\\ApiHandler\\ApiHandlerServiceProvider"
+                "Marcelgwerder\\ApiHandler\\ApiHandlerServiceProvider"
             ]
         }
     },

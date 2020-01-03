@@ -1,29 +1,34 @@
-<?php /** @noinspection ALL */
+<?php
 
+require __DIR__ . "/Post.php";
+require __DIR__ . "/Comment.php";
+require __DIR__ . "/User.php";
+
+use Illuminate\Contracts\Container\BindingResolutionException;
 use \Illuminate\Database\Eloquent\Collection;
 use \Illuminate\Database\Query\Expression;
 use \Illuminate\Http\JsonResponse;
 use \Illuminate\Support\Facades\Config;
 use \Illuminate\Support\Facades\Request;
 use \Illuminate\Support\Facades\Response;
-use \Pluxbox\ApiHandler\ApiHandler;
-use Pluxbox\ApiHandler\ApiHandlerException;
+use \Marcelgwerder\ApiHandler\ApiHandler;
+use Marcelgwerder\ApiHandler\ApiHandlerException;
 use PHPUnit\Framework\TestCase;
-use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
 class ApiHandlerTest extends TestCase
 {
-
 
     /**
      * @var array
      */
     private $params;
+
     /**
      * @var Expression
      */
     private $fulltextSelectExpression;
     private $apiHandler;
+
     /**
      * @var array
      */
@@ -131,9 +136,10 @@ class ApiHandlerTest extends TestCase
     public function testParseSingle()
     {
         $post = new Post();
+
         $result = $this->apiHandler->parseSingle($post, 5, []);
 
-        $this->assertInstanceOf('Pluxbox\ApiHandler\Result', $result);
+        $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
     }
 
     public function testParseMultiple()
@@ -141,7 +147,7 @@ class ApiHandlerTest extends TestCase
         $post = new Post();
         $result = $this->apiHandler->parseMultiple($post, [], []);
 
-        $this->assertInstanceOf('Pluxbox\ApiHandler\Result', $result);
+        $this->assertInstanceOf('Marcelgwerder\ApiHandler\Result', $result);
     }
 
     public function testGetBuilder()
@@ -315,10 +321,8 @@ class ApiHandlerTest extends TestCase
 
         $post = new Post();
 
-        var_dump('testGetResponse1');
         $response = $this->apiHandler->parseMultiple($post, ['title', 'description'], ['_config' => 'response-envelope'])->getResponse();
 
-        var_dump('testGetResponse2');
         $data = $response->getData();
 
         $this->assertInstanceOf('Illuminate\Http\JsonResponse', $response);

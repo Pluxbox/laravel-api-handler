@@ -1,19 +1,23 @@
-<?php namespace Pluxbox\ApiHandler;
+<?php
+namespace Marcelgwerder\ApiHandler;
 
-use \ArrayObject;
-use \Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use \Illuminate\Database\Eloquent\Relations\BelongsTo;
-use \Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use \Illuminate\Database\Eloquent\Relations\HasMany;
-use \Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use \Illuminate\Database\Eloquent\Relations\HasOne;
-use \Illuminate\Database\Eloquent\Relations\MorphMany;
-use \Illuminate\Database\Eloquent\Relations\MorphOne;
-use \Illuminate\Database\Query\Builder as QueryBuilder;
-use \Illuminate\Support\Facades\Config;
-use \InvalidArgumentException;
+use ArrayObject;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Facades\Config;
+use InvalidArgumentException;
 use ReflectionException;
-use \ReflectionObject;
+use ReflectionObject;
 
 class Parser
 {
@@ -62,14 +66,14 @@ class Parser
     /**
      * The base query builder instance.
      *
-     * @var \Illuminate\Database\Query\Builder
+     * @var QueryBuilder
      */
     protected $query;
 
     /**
      * The original query builder instance.
      *
-     * @var \Illuminate\Database\Query\Builder
+     * @var QueryBuilder
      */
     protected $originalQuery;
 
@@ -133,7 +137,7 @@ class Parser
 
         $this->builder = $builder;
         $this->params = $params;
-        
+
         $this->prefix = Config::get('apihandler.prefix');
         $this->envelope = Config::get('apihandler.envelope');
 
@@ -150,8 +154,6 @@ class Parser
             $this->query = $builder->getBaseQuery();
             $this->isEloquentBuilder = true;
         } else if ($isEloquentModel) {
-            var_dump($isEloquentModel);
-            var_dump('Parser.php2');
             //Convert the model to a builder object
             $this->builder = $builder->newQuery();
 
@@ -176,6 +178,7 @@ class Parser
      * @return void
      * @throws ApiHandlerException
      * @throws ReflectionException
+     * @throws BindingResolutionException
      */
     public function parse($options, $multiple = false)
     {
@@ -220,7 +223,7 @@ class Parser
                 } else {
                     $primaryKey = $this->getQualifiedColumnName('id');
                 }
-                
+
                 $this->query->where($primaryKey, $identification);
             }
         }
@@ -333,6 +336,7 @@ class Parser
      * @return void
      * @throws ApiHandlerException
      * @throws ReflectionException
+     * @throws BindingResolutionException
      */
     protected function parseWith($withParam)
     {
@@ -678,7 +682,7 @@ class Parser
     /**
      * Determine the type of the Eloquent relation
      *
-     * @param  Illuminate\Database\Eloquent\Relations\Relation $relation
+     * @param  Relation $relation
      * @return string
      */
     protected function getRelationType($relation)
@@ -716,7 +720,7 @@ class Parser
      * Check if there exists a method marked with the "@Relation"
      * annotation on the given model.
      *
-     * @param Illuminate\Database\Eloquent\Model $model
+     * @param Model $model
      * @param string $relationName
      * @return boolean
      * @throws ReflectionException
@@ -746,11 +750,11 @@ class Parser
      */
     protected function getQualifiedColumnName($column, $table = null)
     {
-        //Check whether there is a matching column expression that contains an 
+        //Check whether there is a matching column expression that contains an
         //alias and should therefore not be turned into a qualified column name.
         $isAlias = count(array_filter($this->query->columns ?: [], function($queryColumn) use ($column) {
-            return preg_match('/.*[\s\'"`]as\s*[\s\'"`]' . $column . '[\'"`]?$/', trim($queryColumn));
-        })) > 0;
+                return preg_match('/.*[\s\'"`]as\s*[\s\'"`]' . $column . '[\'"`]?$/', trim($queryColumn));
+            })) > 0;
 
         if (strpos($column, '.') === false && !$isAlias) {
             return $table ?: $this->query->from.'.'.$column;

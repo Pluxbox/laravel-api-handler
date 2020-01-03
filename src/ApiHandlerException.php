@@ -1,4 +1,6 @@
-<?php namespace Pluxbox\ApiHandler;
+<?php
+
+namespace Marcelgwerder\ApiHandler;
 
 class ApiHandlerException extends \Exception
 {
@@ -13,7 +15,7 @@ class ApiHandlerException extends \Exception
      * Create a new instance of ApiHandlerException
      *
      * @param string $code
-     * @param array  $replace
+     * @param array $replace
      * @param string $message
      */
     public function __construct($code, $replace = [], $message = null)

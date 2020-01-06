@@ -21,7 +21,7 @@ class ApiHandler
      * @throws ReflectionException
      * @throws BindingResolutionException
      */
-    public static function parseSingle($queryBuilder, $identification, $queryParams = false)
+    public function parseSingle($queryBuilder, $identification, $queryParams = false)
     {
         if ($queryParams === false) {
             $queryParams = Request::input();
@@ -44,7 +44,7 @@ class ApiHandler
      * @throws ReflectionException
      * @throws BindingResolutionException
      */
-    public static function parseMultiple($queryBuilder, $fullTextSearchColumns = array(), $queryParams = false)
+    public function parseMultiple($queryBuilder, $fullTextSearchColumns = array(), $queryParams = false)
     {
 
         if ($queryParams === false) {
@@ -59,10 +59,10 @@ class ApiHandler
     /**
      * Return a new "created" response object
      *
-     * @param  array|object $object
+     * @param array|object $object
      * @return JsonResponse
      */
-    public static function created($object)
+    public function created($object)
     {
         return Response::json($object, 201);
     }
@@ -70,10 +70,10 @@ class ApiHandler
     /**
      * Return a new "updated" response object
      *
-     * @param  array|object $object
+     * @param array|object $object
      * @return JsonResponse|\Illuminate\Http\Response
      */
-    public static function updated($object = null)
+    public function updated($object = null)
     {
         if ($object != null) {
             return Response::json($object, 200);
@@ -85,10 +85,10 @@ class ApiHandler
     /**
      * Return a new "deleted" response object
      *
-     * @param  array|object $object
+     * @param array|object $object
      * @return JsonResponse|\Illuminate\Http\Response
      */
-    public static function deleted($object = null)
+    public function deleted($object = null)
     {
         if ($object != null) {
             return Response::json($object, 200);
